@@ -8,94 +8,58 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Category } from '../entities/category.entity';
-import { ServiceContact } from '../entities/service-contact.entity';
+import { CategoriesService } from './categories.service';
 
 @Controller('api')
 export class CategoriesController {
-  constructor(
-    @InjectRepository(Category)
-    private readonly categoryRepo: Repository<Category>,
-    @InjectRepository(ServiceContact)
-    private readonly contactRepo: Repository<ServiceContact>,
-  ) {}
+  constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get('categories')
-  async getCategories() {
-    return this.categoryRepo.find();
+  getCategories() {
+    return this.categoriesService.getCategories();
   }
 
   @Post('categories')
-  async createCategory(@Body() body: { id?: string; name?: string }) {
-    const { id, name } = body;
-    if (!id || !name) return { error: 'Missing id or name' };
-    const exists = await this.categoryRepo.findOne({ where: { id } });
-    if (exists) return { error: 'Category ID already exists' };
-    const cat = await this.categoryRepo.save(
-      this.categoryRepo.create({ id, name }),
-    );
-    return cat;
+  createCategory(@Body() body: { id?: string; name?: string }) {
+    return this.categoriesService.createCategory(body);
   }
 
   @Put('categories/:id')
-  async updateCategory(
-    @Param('id') id: string,
-    @Body() body: { name?: string },
-  ) {
-    const cat = await this.categoryRepo.findOne({ where: { id } });
-    if (!cat) return { error: 'Category not found' };
-    cat.name = body.name || cat.name;
-    return this.categoryRepo.save(cat);
+  updateCategory(@Param('id') id: string, @Body() body: { name?: string }) {
+    return this.categoriesService.updateCategory(id, body);
   }
 
   @Delete('categories/:id')
   @HttpCode(204)
-  async deleteCategory(@Param('id') id: string) {
-    await this.categoryRepo.delete({ id });
+  deleteCategory(@Param('id') id: string) {
+    return this.categoriesService.deleteCategory(id);
   }
 
   @Get('members')
-  async getServiceMembers() {
-    return this.contactRepo.find();
+  getServiceMembers() {
+    return this.categoriesService.getServiceMembers();
   }
 
   @Get('members/:category')
-  async getByCategory(@Param('category') category: string) {
-    return this.contactRepo.find({ where: { category } });
+  getByCategory(@Param('category') category: string) {
+    return this.categoriesService.getByCategory(category);
   }
 
   @Post('members')
-  async createMember(
+  createMember(
     @Body() body: { name?: string; phone?: string; category?: string },
   ) {
-    const { name, phone, category } = body;
-    if (!name || !phone || !category) {
-      return { error: 'Missing required fields' };
-    }
-    const newMember = await this.contactRepo.save(
-      this.contactRepo.create({
-        id: Date.now().toString(),
-        name,
-        phone,
-        category,
-      }),
-    );
-    return newMember;
+    return this.categoriesService.createMember(body);
   }
 
   @Put('members/:id')
-  async updateMember(@Param('id') id: string, @Body() body: any) {
-    const member = await this.contactRepo.findOne({ where: { id } });
-    if (!member) return { error: 'Member not found' };
-    Object.assign(member, body);
-    return this.contactRepo.save(member);
+  updateMember(@Param('id') id: string, @Body() body: Record<string, unknown>) {
+    return this.categoriesService.updateMember(id, body);
   }
 
   @Delete('members/:id')
   @HttpCode(204)
-  async deleteMember(@Param('id') id: string) {
-    await this.contactRepo.delete({ id });
+  deleteMember(@Param('id') id: string) {
+    return this.categoriesService.deleteMember(id);
   }
 }

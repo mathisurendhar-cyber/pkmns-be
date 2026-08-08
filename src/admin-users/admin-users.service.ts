@@ -1,23 +1,15 @@
-import {
-  Body,
-  Controller,
-  Delete,
-  Get,
-  Param,
-  Post,
-} from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AdminUser } from '../entities/admin-user.entity';
 
-@Controller('api')
-export class AdminUsersController {
+@Injectable()
+export class AdminUsersService {
   constructor(
     @InjectRepository(AdminUser)
     private readonly adminRepo: Repository<AdminUser>,
   ) {}
 
-  @Get('users')
   async getUsers() {
     const users = await this.adminRepo.find();
     return users.map((u) => ({
@@ -35,19 +27,15 @@ export class AdminUsersController {
     }));
   }
 
-  @Post('addUser')
-  async addUser(
-    @Body()
-    body: {
-      username?: string;
-      password?: string;
-      role?: string;
-      phone?: string;
-      joined?: string;
-      email?: string;
-      avatar?: string;
-    },
-  ) {
+  async addUser(body: {
+    username?: string;
+    password?: string;
+    role?: string;
+    phone?: string;
+    joined?: string;
+    email?: string;
+    avatar?: string;
+  }) {
     const { username, password, role, phone, joined, email, avatar } = body;
     if (!username) {
       return { success: false, message: 'Username required' };
@@ -72,19 +60,15 @@ export class AdminUsersController {
     return { success: true };
   }
 
-  @Post('updateUser')
-  async updateUser(
-    @Body()
-    body: {
-      username?: string;
-      password?: string;
-      role?: string;
-      phone?: string;
-      joined?: string;
-      email?: string;
-      avatar?: string;
-    },
-  ) {
+  async updateUser(body: {
+    username?: string;
+    password?: string;
+    role?: string;
+    phone?: string;
+    joined?: string;
+    email?: string;
+    avatar?: string;
+  }) {
     const user = await this.adminRepo.findOne({
       where: { username: body.username },
     });
@@ -101,8 +85,7 @@ export class AdminUsersController {
     return { success: true };
   }
 
-  @Delete('deleteAdmin/:username')
-  async deleteAdmin(@Param('username') username: string) {
+  async deleteAdmin(username: string) {
     if (username === 'mainadmin') {
       return { success: false, message: 'Cannot delete mainadmin' };
     }
