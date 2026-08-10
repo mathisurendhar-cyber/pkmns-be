@@ -4,6 +4,7 @@ import { AdminUser } from '../entities/admin-user.entity';
 import { Category } from '../entities/category.entity';
 import { MembershipApplication } from '../entities/membership-application.entity';
 import { Visitor } from '../entities/visitor.entity';
+import { MailService } from './mail.service';
 import { SeedService } from './seed.service';
 import { TelegramService } from './telegram.service';
 import { UploadService } from './upload.service';
@@ -17,7 +18,7 @@ import { UploadService } from './upload.service';
       Visitor,
     ]),
   ],
-  providers: [UploadService, TelegramService, SeedService],
-  exports: [UploadService, TelegramService],
+  providers: [UploadService, TelegramService, SeedService, MailService],
+  exports: [UploadService, TelegramService, MailService],
 })
 export class CommonModule {}

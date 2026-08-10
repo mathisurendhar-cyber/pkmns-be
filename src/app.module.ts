@@ -29,14 +29,9 @@ import { VisitorsModule } from './visitors/visitors.module';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        type: 'postgres' as const,
-        host: config.get<string>('DB_HOST') || 'localhost',
-        port: parseInt(config.get<string>('DB_PORT') || '5432', 10),
-        username: config.get<string>('DB_USERNAME') || 'postgres',
-        password: config.get<string>('DB_PASSWORD') || 'root',
-        database: config.get<string>('DB_DATABASE') || 'pkmns',
-        entities: [
+      useFactory: (config: ConfigService) => {
+        const databaseUrl = config.get<string>('DATABASE_URL');
+        const entities = [
           AdminUser,
           Member,
           Event,
@@ -47,9 +42,29 @@ import { VisitorsModule } from './visitors/visitors.module';
           ServiceContact,
           MembershipApplication,
           Visitor,
-        ],
-        synchronize: true,
-      }),
+        ];
+
+        if (databaseUrl) {
+          return {
+            type: 'postgres' as const,
+            url: databaseUrl,
+            ssl: { rejectUnauthorized: false },
+            entities,
+            synchronize: true,
+          };
+        }
+
+        return {
+          type: 'postgres' as const,
+          host: config.get<string>('DB_HOST') || 'localhost',
+          port: parseInt(config.get<string>('DB_PORT') || '5432', 10),
+          username: config.get<string>('DB_USERNAME') || 'postgres',
+          password: config.get<string>('DB_PASSWORD') || 'root',
+          database: config.get<string>('DB_DATABASE') || 'pkmns',
+          entities,
+          synchronize: true,
+        };
+      },
     }),
     CommonModule,
     AuthModule,
