@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { MailService } from '../common/mail.service';
 import { AdminUser } from '../entities/admin-user.entity';
 
 @Injectable()
@@ -8,6 +9,7 @@ export class AuthService {
   constructor(
     @InjectRepository(AdminUser)
     private readonly adminRepo: Repository<AdminUser>,
+    private readonly mailService: MailService,
   ) {}
 
   async loginStep1(body: {
@@ -37,7 +39,20 @@ export class AuthService {
     user.otpExpiry = String(Date.now() + 5 * 60 * 1000);
     await this.adminRepo.save(user);
 
-    return { success: true, message: 'OTP generated', otp };
+    try {
+      await this.mailService.sendOtpEmail(email, otp);
+    } catch (err: any) {
+      console.error('OTP email failed:', err?.message || err);
+      user.otp = null;
+      user.otpExpiry = null;
+      await this.adminRepo.save(user);
+      return {
+        success: false,
+        message: 'Failed to send OTP email. Check SMTP configuration.',
+      };
+    }
+
+    return { success: true, message: 'OTP sent to your email' };
   }
 
   async loginStep2(body: { email?: string; otp?: string }) {
