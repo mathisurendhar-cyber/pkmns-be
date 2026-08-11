@@ -3,6 +3,7 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 import { json, urlencoded } from 'express';
 import { join } from 'path';
 import { AppModule } from './app.module';
+import * as nodemailer from 'nodemailer';
 
 async function bootstrap() {
   const app =
