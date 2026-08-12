@@ -32,12 +32,27 @@ export class MailService {
     return this.transporter;
   }
 
-  async sendOtpEmail(to: string, otp: string) {
-    const from =
+  private resolveFromAddress() {
+    const user = this.config.get<string>('SMTP_USER') || '';
+    let from =
       this.config.get<string>('SMTP_FROM') ||
-      this.config.get<string>('SMTP_USER') ||
+      user ||
       'noreply@example.com';
 
+    if (!from.includes('@')) {
+      from = user ? `"${from}" <${user}>` : from;
+    } else if (!from.includes('<')) {
+      const match = from.match(/^(.+?)\s+([\w.+-]+@[\w.-]+\.\w+)$/);
+      if (match) {
+        from = `"${match[1].trim()}" <${match[2]}>`;
+      }
+    }
+
+    return from;
+  }
+
+  async sendOtpEmail(to: string, otp: string) {
+    const from = this.resolveFromAddress();
     const transporter = this.getTransporter();
 
     await transporter.sendMail({
