@@ -30,7 +30,6 @@ export class CategoriesController {
   }
 
   @Delete('categories/:id')
-  @HttpCode(204)
   deleteCategory(@Param('id') id: string) {
     return this.categoriesService.deleteCategory(id);
   }
@@ -58,7 +57,6 @@ export class CategoriesController {
   }
 
   @Delete('members/:id')
-  @HttpCode(204)
   deleteMember(@Param('id') id: string) {
     return this.categoriesService.deleteMember(id);
   }

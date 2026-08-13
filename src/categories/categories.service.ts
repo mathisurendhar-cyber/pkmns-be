@@ -13,16 +13,52 @@ export class CategoriesService {
     private readonly contactRepo: Repository<ServiceContact>,
   ) {}
 
-  getCategories() {
-    return this.categoryRepo.find();
+  private matchesCategory(
+    contactCategory: string,
+    category: Category,
+  ) {
+    const value = (contactCategory || '').trim().toLowerCase();
+    return (
+      value === String(category.id).toLowerCase() ||
+      value === String(category.name).toLowerCase()
+    );
+  }
+
+  async getCategories() {
+    const [categories, contacts] = await Promise.all([
+      this.categoryRepo.find(),
+      this.contactRepo.find(),
+    ]);
+
+    return categories.map((category) => {
+      const count = contacts.filter((contact) =>
+        this.matchesCategory(contact.category, category),
+      ).length;
+      return {
+        ...category,
+        count,
+        providers_count: count,
+      };
+    });
   }
 
   async createCategory(body: { id?: string; name?: string }) {
-    const { id, name } = body;
-    if (!id || !name) return { error: 'Missing id or name' };
+    let { id, name } = body;
+    if (!name?.trim()) return { error: 'Missing name' };
+
+    name = name.trim();
+    if (!id?.trim()) {
+      id = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_|_$/g, '');
+    }
+
     const exists = await this.categoryRepo.findOne({ where: { id } });
     if (exists) return { error: 'Category ID already exists' };
-    return this.categoryRepo.save(this.categoryRepo.create({ id, name }));
+    return this.categoryRepo.save(
+      this.categoryRepo.create({ id, name, image: '' }),
+    );
   }
 
   async updateCategory(id: string, body: { name?: string }) {
@@ -33,7 +69,12 @@ export class CategoriesService {
   }
 
   async deleteCategory(id: string) {
+    const linked = await this.contactRepo.count({ where: { category: id } });
+    if (linked > 0) {
+      return { error: 'Remove providers from this category first.' };
+    }
     await this.categoryRepo.delete({ id });
+    return { success: true };
   }
 
   getServiceMembers() {
@@ -56,9 +97,9 @@ export class CategoriesService {
     return this.contactRepo.save(
       this.contactRepo.create({
         id: Date.now().toString(),
-        name,
-        phone,
-        category,
+        name: name.trim(),
+        phone: phone.trim(),
+        category: String(category).trim(),
       }),
     );
   }
@@ -72,5 +113,6 @@ export class CategoriesService {
 
   async deleteMember(id: string) {
     await this.contactRepo.delete({ id });
+    return { success: true };
   }
 }

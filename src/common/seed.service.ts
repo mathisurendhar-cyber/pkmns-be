@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { AdminUser } from '../entities/admin-user.entity';
 import { Category } from '../entities/category.entity';
 import { MembershipApplication } from '../entities/membership-application.entity';
+import { ServiceContact } from '../entities/service-contact.entity';
 import { Visitor } from '../entities/visitor.entity';
 
 const SEED_USERS = [
@@ -78,7 +79,40 @@ const SEED_CATEGORIES = [
   { id: 'gas', name: 'Gas', image: '/img/services/gas.png' },
   { id: 'cm_cell', name: 'CM Cell', image: '/img/services/cm_cell.png' },
   { id: 'mechanic', name: 'Mechanic', image: '/img/services/mechanic.png' },
-  { id: '8', name: 'car_service', image: '' },
+  { id: 'car_service', name: 'Car Service', image: '' },
+];
+
+const SEED_CONTACTS = [
+  {
+    id: 'svc-police-1',
+    name: 'City Police Department',
+    phone: '9876543210',
+    category: 'police',
+  },
+  {
+    id: 'svc-police-2',
+    name: 'Central Police Station',
+    phone: '9876512345',
+    category: 'police',
+  },
+  {
+    id: 'svc-taxi-1',
+    name: 'Ambal Nagar Taxi Stand',
+    phone: '9884012345',
+    category: 'taxi',
+  },
+  {
+    id: 'svc-electric-1',
+    name: 'Neighborhood Electrician',
+    phone: '9840011122',
+    category: 'electrician',
+  },
+  {
+    id: 'svc-plumber-1',
+    name: 'Community Plumber',
+    phone: '9840033344',
+    category: 'plumber',
+  },
 ];
 
 @Injectable()
@@ -92,6 +126,8 @@ export class SeedService implements OnModuleInit {
     private readonly appRepo: Repository<MembershipApplication>,
     @InjectRepository(Visitor)
     private readonly visitorRepo: Repository<Visitor>,
+    @InjectRepository(ServiceContact)
+    private readonly contactRepo: Repository<ServiceContact>,
   ) {}
 
   async onModuleInit() {
@@ -107,6 +143,14 @@ export class SeedService implements OnModuleInit {
         SEED_CATEGORIES.map((c) => this.categoryRepo.create(c)),
       );
       console.log('Seeded categories');
+    }
+
+    const contactCount = await this.contactRepo.count();
+    if (contactCount === 0) {
+      await this.contactRepo.save(
+        SEED_CONTACTS.map((c) => this.contactRepo.create(c)),
+      );
+      console.log('Seeded service_contacts');
     }
 
     const appCount = await this.appRepo.count();
