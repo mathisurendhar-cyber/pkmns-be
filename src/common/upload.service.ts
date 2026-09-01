@@ -1,22 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
-import { join, extname } from 'path';
+import { join } from 'path';
+import { ensureUploadDirs, getUploadsRoot } from './uploads-path';
 
 @Injectable()
 export class UploadService {
-  private uploadsRoot = join(process.cwd(), 'uploads');
+  private uploadsRoot = getUploadsRoot();
 
   constructor() {
-    for (const dir of [
-      this.uploadsRoot,
-      join(this.uploadsRoot, 'events'),
-      join(this.uploadsRoot, 'members'),
-      join(this.uploadsRoot, 'news'),
-      join(this.uploadsRoot, 'office_bearers'),
-      join(this.uploadsRoot, 'contact'),
-    ]) {
-      if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    }
+    this.uploadsRoot = ensureUploadDirs();
   }
 
   saveFile(
