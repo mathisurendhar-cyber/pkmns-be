@@ -19,9 +19,9 @@ export class EventsController {
 
   @Post('events')
   @UseInterceptors(
-    FilesInterceptor('files', 10, {
+    FilesInterceptor('files', 20, {
       storage: memoryStorage(),
-      limits: { fileSize: 50 * 1024 * 1024 },
+      limits: { fileSize: 500 * 1024 * 1024 },
     }),
   )
   create(
