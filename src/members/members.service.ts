@@ -29,7 +29,7 @@ export class MembersService {
       }
       let photo_url: string | null = null;
       if (file) {
-        photo_url = this.uploadService.saveFile(
+        photo_url = await this.uploadService.saveFile(
           file,
           'members',
           `member_${username}`,
@@ -88,7 +88,7 @@ export class MembersService {
       member.joined = body.joined ?? member.joined;
 
       if (file) {
-        member.photo_url = this.uploadService.saveFile(
+        member.photo_url = await this.uploadService.saveFile(
           file,
           'members',
           `member_${body.username || member.username}`,

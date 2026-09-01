@@ -2,35 +2,47 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { json, urlencoded } from 'express';
 import type { NextFunction, Request, Response } from 'express';
-import { existsSync, statSync } from 'fs';
 import { join, relative, resolve, sep } from 'path';
 import { AppModule } from './app.module';
+import { UploadService } from './common/upload.service';
 import { ensureUploadDirs, getUploadsRoot } from './common/uploads-path';
 
-function serveUploads(req: Request, res: Response, next: NextFunction) {
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    return next();
-  }
+function createUploadMiddleware(uploadService: UploadService) {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      return next();
+    }
 
-  const remainder = decodeURIComponent((req.path || req.url || '').split('?')[0]);
-  const relativePath = remainder.replace(/^\/+/, '');
-  if (!relativePath) {
-    return res.status(404).json({ success: false, message: 'File not found' });
-  }
+    const remainder = decodeURIComponent((req.path || req.url || '').split('?')[0]);
+    const relativePath = remainder.replace(/^\/+/, '');
+    if (!relativePath) {
+      return res.status(404).json({ success: false, message: 'File not found' });
+    }
 
-  const root = getUploadsRoot();
-  const absolutePath = resolve(root, relativePath);
-  const inside = relative(root, absolutePath);
-  if (!inside || inside.startsWith('..') || inside.includes(`..${sep}`)) {
-    return res.status(400).json({ success: false, message: 'Invalid path' });
-  }
+    const root = getUploadsRoot();
+    const absolutePath = resolve(root, relativePath);
+    const inside = relative(root, absolutePath);
+    if (!inside || inside.startsWith('..') || inside.includes(`..${sep}`)) {
+      return res.status(400).json({ success: false, message: 'Invalid path' });
+    }
 
-  if (!existsSync(absolutePath) || !statSync(absolutePath).isFile()) {
-    return res.status(404).json({ success: false, message: 'File not found' });
-  }
+    try {
+      const stored = await uploadService.resolveStoredFile(relativePath);
+      if (!stored) {
+        return res.status(404).json({ success: false, message: 'File not found' });
+      }
 
-  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-  return res.sendFile(absolutePath);
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      res.setHeader('Content-Type', stored.mime);
+      if (req.method === 'HEAD') {
+        return res.status(200).end();
+      }
+      return res.sendFile(stored.absolutePath);
+    } catch (err) {
+      console.error('Upload serve failed:', err);
+      return next(err);
+    }
+  };
 }
 
 async function bootstrap() {
@@ -40,7 +52,7 @@ async function bootstrap() {
   app.use(urlencoded({ extended: true, limit: '50mb' }));
 
   ensureUploadDirs();
-  app.use('/uploads', serveUploads);
+  app.use('/uploads', createUploadMiddleware(app.get(UploadService)));
   app.useStaticAssets(join(process.cwd(), 'public', 'img'), { prefix: '/img' });
 
   app.enableCors({

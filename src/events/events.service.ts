@@ -27,7 +27,7 @@ export class EventsService {
       const fileUrls: string[] = [];
       if (files?.length) {
         for (const file of files) {
-          fileUrls.push(this.uploadService.saveFile(file, 'events', 'event'));
+          fileUrls.push(await this.uploadService.saveFile(file, 'events', 'event'));
         }
       }
       const event = await this.eventRepo.save(

@@ -15,6 +15,7 @@ import { MembershipApplication } from './entities/membership-application.entity'
 import { News } from './entities/news.entity';
 import { OfficeBearer } from './entities/office-bearer.entity';
 import { ServiceContact } from './entities/service-contact.entity';
+import { UploadAsset } from './entities/upload-asset.entity';
 import { Visitor } from './entities/visitor.entity';
 import { EventsModule } from './events/events.module';
 import { MembersModule } from './members/members.module';
@@ -42,6 +43,7 @@ import { VisitorsModule } from './visitors/visitors.module';
           ServiceContact,
           MembershipApplication,
           Visitor,
+          UploadAsset,
         ];
 
         if (databaseUrl) {

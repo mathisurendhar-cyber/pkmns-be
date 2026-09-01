@@ -23,7 +23,7 @@ export class NewsService {
       }
       let image_url: string | undefined;
       if (file) {
-        image_url = this.uploadService.saveFile(file, 'news', 'news');
+        image_url = await this.uploadService.saveFile(file, 'news', 'news');
       }
       await this.newsRepo.save(
         this.newsRepo.create({ title, content, image_url }),

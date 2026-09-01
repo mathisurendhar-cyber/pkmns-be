@@ -30,7 +30,7 @@ export class OfficeBearersService {
       if (!name || !role || !file) {
         return { success: false };
       }
-      const image_url = this.uploadService.saveFile(
+      const image_url = await this.uploadService.saveFile(
         file,
         'office_bearers',
         'office',

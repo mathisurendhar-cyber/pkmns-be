@@ -51,7 +51,7 @@ export class ContactService {
         await this.telegram.sendMessage(text, 'Markdown');
         if (files?.length) {
           for (const file of files) {
-            const saved = this.uploadService.saveDiskFile(file, 'contact');
+            const saved = await this.uploadService.saveDiskFile(file, 'contact');
             await this.telegram.sendDocument(saved.path);
           }
         }
