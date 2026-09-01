@@ -31,6 +31,8 @@ export class EventsController {
     return this.eventsService.create(body, files);
   }
 
+  
+
   @Get('events')
   findAll() {
     return this.eventsService.findAll();
